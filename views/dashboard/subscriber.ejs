@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscriber | Dashboard</title>
+    <%- include('../templates/library.ejs') %>
+    <style>
+        tbody tr:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body x-data="action">
+    <%- include('../templates/header.ejs') %>
+    <div class="table-responsive mt-5">
+        <table class="table text-white">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Memberships ID</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Subscriber Name</th>
+                    <th scope="col">Subscriber Email</th>
+                    <th scope="col">Expiry</th>
+                    <th scope="col">Memberships Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% subscriber.forEach((subscribe, index) => { %>
+                <tr>
+                    <% const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'Desember'] %>
+                    <th scope="row"><%= index + 1 %></th>
+                    <td><%= subscribe.membershipId %></td>
+                    <td><%= subscribe.title %></td>
+                    <td><%= subscribe.fullName %></td>
+                    <td><%= subscribe.email %></td>
+                    <% const expiryDate = new Date(subscribe.expiry) %>
+                    <td><%= expiryDate.getDate() %> <%= months[expiryDate.getMonth()] %> <%= expiryDate.getFullYear() %></td>
+                    <td><%= subscribe.status.toUpperCase() %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('action', () => ({
+            cancelSubscription() {
+                
+            }
+        }))
+    })
+</script>
+</html>

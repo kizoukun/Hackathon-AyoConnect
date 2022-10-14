@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memberships | Catalysts</title>
+    <%- include('./templates/library.ejs') %>
+</head>
+<body x-data="action">
+    <%- include('./templates/header.ejs') %>
+    <div class="container mt-5">
+        <% if(memberships.length > 0) { %>
+            <div class="container">
+                <div class="row gap-4">
+                    <% memberships.forEach((member) => { %>
+                        <div class="card col-6 col-md-4" style="width: 18rem;">
+                        <% if(member.image === undefined || member.image.length < 5) { %>
+                        <img src="https://store.roompixel.com/assets/catalysts.PNG" class="card-img-top" alt="Catalysts">
+                        <% } else { %>
+                        <img src="<%= member.image %>" class="card-img-top" alt="<%= member.title %>">
+                        <% } %>
+                        <div class="card-body">
+                            <h5 class="card-title"><%= member.title %></h5>
+                            <p class="card-text"><%= member.description %></p>
+                            <p class="card-text">Rp. <%= member.price.toLocaleString() %>/monthly</p>
+                            <button type="button" class="btn btn-primary" @click="confirmPurchase('<%= member._id %>')">Purchase</button>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+        <% } else { %>
+            <h1 class="text-white">This user currently has no memberships package available</h1>
+        <% } %>
+    </div>
+    <!-- PURCHASE MEMBERSHIPS MODAL -->
+    <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <form @submit.prevent="purchaseMemberships">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title text-black" id="purchaseModalLabel">Purchase Memberships</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="title" class="form-label text-black">Select Payment Method</label>
+                            <select class="form-select" x-model="purchaseData.paymentMethod">
+                                <option value="002">BRI</option>
+                                <option value="008">Mandiri</option>
+                                <option value="022">CIMB Niaga</option>
+                              </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" x-bind:disabled="onSubmit">Purchase now</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('action', () => ({
+            modal: new bootstrap.Modal(document.getElementById('purchaseModal'), {backdrop: true}),
+            onSubmit: false,
+            purchaseData: {
+                memberId: "",
+                paymentMethod: "002",
+            },
+            confirmPurchase(id) {
+                this.purchaseData.memberId = id;
+                this.modal.show();
+            },
+            purchaseMemberships(id) {
+                this.onSubmit = true;
+                fetch(window.location.href, {
+                    method: "POST",
+                    headers: {
+                        "accept": "application/json",
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(this.purchaseData)
+                }).then(response => response.json())
+                .then(response => {
+                    this.modal.hide();
+                    if(response.success) {
+                        Swal.fire({
+                            title: 'Submit your OTP Code',
+                            input: 'number',
+                            inputAttributes: {
+                                autocapitalize: 'off'
+                            },
+                            showCancelButton: true,
+                            confirmButtonText: 'Look up',
+                            showLoaderOnConfirm: true,
+                            backdrop: true,
+                            preConfirm: (id) => {
+                                return fetch(`${window.location.fullPath}/verification`, {
+                                        method: 'POST',
+                                        headers: { 
+                                            'Accept': 'application/json',
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({subscriptionId: response.subscriptionId, otpCode: id})
+                                    })
+                                    .then(response => response.json())
+                                    .then(response => {
+                                        if (!response.success) {
+                                            throw new Error(response.message)
+                                        }
+                                        return response
+                                    })
+                                    .catch(error => {
+                                        Swal.showValidationMessage(
+                                            `Request failed: ${error}`
+                                        )
+                                        this.onSubmit = false;
+                                    })
+                            },
+                            allowOutsideClick: () => !Swal.isLoading()
+                            })
+                            .then((result) => {
+                                if (result.isConfirmed) {
+                                    this.onSubmit = false;
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: `Successfully`,
+                                        text: "Successfully purchase membership"
+                                    })
+                                    window.location.href = "/dashboard/subscription"
+                                    return;
+                                }
+                                this.onSubmit = false;
+                                return;
+                            })
+                        return;
+                    }
+                    this.onSubmit = false;
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: response.message,
+                    })
+                })
+                .catch(error => {
+                    this.onSubmit = false;
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: error.message,
+                    })
+                })
+            }
+        }))
+    })
+</script>
+</html>

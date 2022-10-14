@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <style>
+    label, input {
+        display: block;
+    }
+
+    input {
+        margin-bottom: 20px;
+    }
+    p, h1, label{
+        color: #fff;
+    }
+    </style>
+    <%- include('../templates/library.ejs') %>
+</head>
+<body>
+    <a href="/"><img src="/image/catalysts.JPG" alt="catalyst logo" width="50" /></a>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="d-flex flex-column">
+            <h1 class="text-center">Sign in to Catalyst</h1>
+            <p class="text-center">Want to access your dashboard? <a href="/auth/login" class="link">Sign in here instead!</a></p>
+            <form id="register-form">
+                <div class="d-flex flex-column d-grid gap-2 mt-2">
+                    <label class="text-uppercase fw-bold" for="email">Email</label>
+                    <input class="form-control form-control-lg" id="email" name="email" type="email"/>
+                    <label class="text-uppercase fw-bold" for="username">Username</label>
+                    <input class="form-control form-control-lg" id="username" name="username" type="text"/>
+                    <label class="text-uppercase fw-bold" for="firstname">First Name</label>
+                    <input class="form-control form-control-lg" id="firstname" name="firstName" type="text"/>
+                    <label class="text-uppercase fw-bold" for="lastname">Last Name</label>
+                    <input class="form-control form-control-lg" id="lastname" name="lastName" type="text"/>
+                    <label for="password" class="text-uppercase fw-bold">Password</label>
+                    <input class="form-control form-control-lg" id="password" name="password" type="password"/>
+                    <button class="btn btn-dark text-uppercase fw-bold btn-lg mt-2" type="submit">Sign up</button>
+                    <p class="text-center">By signing up you agree to catalyst's <a class="link" href="#">Terms of
+                        Use</a><br> and <a class="link" href="#">Privacy Policy.</a></p>
+                <p class="text-center">Already have an account? <a  class="link" href="/auth/login">Log in here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    const registerForm = document.getElementById("register-form");
+    registerForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const formProps = Object.fromEntries(formData);
+        fetch('/auth/register', {
+            method: "POST",
+            headers: {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(formProps)
+        }).then(response => response.json())
+        .then(response => {
+            if(response.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Account Created",
+                })
+                window.location.href = "/auth/login"
+                return;
+            }
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: response.message,
+            })
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: error.message,
+            })
+        })
+    })
+</script>
+</html>

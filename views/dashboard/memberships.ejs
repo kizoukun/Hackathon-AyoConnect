@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memberships | Dashboard</title>
+    <style>
+    label, input {
+        display: block;
+    }
+    .submitForm {
+        color: #fff;
+    }
+
+    input {
+        margin-bottom: 20px;
+    }
+    tbody tr:hover {
+        cursor: pointer;
+    }
+    </style>
+    <%- include('../templates/library.ejs') %>
+</head>
+<body  x-data="action">
+        <%- include('../templates/header.ejs') %>
+    <div class="mt-5">
+        <form @submit.prevent="submitForm" class="submitForm">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" name="title" id="title" x-model="newMembershipsData.title" placeholder="Title" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <input type="text" class="form-control" name="description" id="description" x-model="newMembershipsData.description" placeholder="Description" required>
+            </div>
+            <div class="mb-3">
+                <label for="imageurl" class="form-label">Image URL</label>
+                <input type="text" class="form-control" name="imageurl" id="imageurl" placeholder="Image URL" x-model="newMembershipsData.imageurl" required>
+            </div>
+            <div class="mb-3">
+                <label for="price" class="form-label">Price</label>
+                <input type="number" class="form-control" name="price" id="price" placeholder="Price" x-model="newMembershipsData.price" required>
+            </div>
+            <div class="mb-3">
+                <label for="sortid" class="form-label">Sort ID</label>
+                <input type="number" class="form-control" name="sortid" id="sortid" placeholder="Sort ID" x-model="newMembershipsData.sortId" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit forms</button>
+        </form>
+    </div>
+    <div class="table-responsive mt-5">
+        <% if(memberships.length > 0) { %>
+            <table class="table text-white">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Image</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Sort</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% memberships.forEach((member, index) => { %>
+                    <tr @click="editMemberships('<%= member.id %>')">
+                        <th scope="row"><%= index + 1%></th>
+                        <td><%= member.title %></td>
+                        <td><%= member.description %></td>
+                        <td><%= member.image %></td>
+                        <td><%= member.price %></td>
+                        <td><%= member.sortId %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } else { %>
+            <h1 class="text-white">You currently has no memberships package available</h1>
+        <% } %>
+    </div>
+    <!-- EDIT MEMBERSHIPS MODAL -->
+    <div class="modal fade" id="editMembershipsModal" tabindex="-1" aria-labelledby="editMembershipsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form @submit.prevent="submitEditMembership">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title text-black" id="editMembershipsModalLabel">Edit Memberships</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="title" class="form-label text-black">Title</label>
+                            <input type="text" class="form-control" name="title" id="title" x-model="editMembershipsData.title" placeholder="Title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label text-black">Description</label>
+                            <input type="text" class="form-control" name="description" id="description" x-model="editMembershipsData.description" placeholder="Description" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imageurl" class="form-label text-black">Image URL</label>
+                            <input type="text" class="form-control" name="imageurl" id="imageurl" placeholder="Image URL" x-model="editMembershipsData.imageurl" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label text-black">Price</label>
+                            <input type="number" class="form-control" name="price" id="price" placeholder="Price" x-model="editMembershipsData.price" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sortid" class="form-label text-black">Sort ID</label>
+                            <input type="number" class="form-control" name="sortid" id="sortid" placeholder="Sort ID" x-model="editMembershipsData.sortId" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('action', () => ({
+            modal: new bootstrap.Modal(document.getElementById('editMembershipsModal'), {backdrop: true}),
+            newMembershipsData: {
+                title: "",
+                description: "",
+                imageurl: "",
+                price: "",
+                sortId: "",
+            },
+            editMembershipsData: {
+                id: "",
+                title: "",
+                description: "",
+                imageurl: "",
+                price: "",
+                sortId: "",
+            },
+            memberships: JSON.parse('<%- JSON.stringify(memberships) %>'),
+            submitForm() {
+                fetch('/dashboard/memberships', {
+                    method: "POST",
+                    headers: {
+                        "accept": "application/json",
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(this.newMembershipsData)
+                }).then(response => response.json())
+                .then(response => {
+                    if(response.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success",
+                            text: "Successfully created memberships",
+                        })
+                        window.location.href = "/dashboard/memberships"
+                        return;
+                    }
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: response.message,
+                    })
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: error.message,
+                    })
+                })
+            },
+            editMemberships(id) {
+                this.modal.show();
+                const membership = this.memberships.find((member) => member._id === id);
+                this.editMembershipsData = {
+                    id: membership._id.toString(),
+                    title: membership.title,
+                    description: membership.description,
+                    imageurl: membership.image,
+                    price: membership.price,
+                    sortId: membership.sortId,
+                }
+            },
+            submitEditMembership() {
+                this.modal.hide();
+                fetch('/dashboard/memberships', {
+                    method: "PATCH",
+                    headers: {
+                        "accept": "application/json",
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(this.editMembershipsData)
+                }).then(response => response.json())
+                .then(response => {
+                    if(response.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success",
+                            text: "Successfully edit memberships",
+                        })
+                        window.location.href = "/dashboard/memberships"
+                        return;
+                    }
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: response.message,
+                    })
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: error.message,
+                    })
+                })
+            }
+        }))
+    })
+</script>
+</html>

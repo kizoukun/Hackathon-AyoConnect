@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards | Dashboard</title>
+    <%- include('../templates/library.ejs') %>
+    <style>
+        tbody tr:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body x-data="action">
+    <%- include('../templates/header.ejs') %>
+    <div class="table-responsive mt-5">
+    <button type="button mt-5" class="btn btn-primary" @click="bindCard">Add New Cards</button>
+        <table class="table text-white">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Bank Code</th>
+                    <th scope="col">Bank Name</th>
+                    <th scope="col">Card Number</th>
+                    <th scope="col">Card Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% cards.forEach((card, index) => { %>
+                <tr @click="unbindCard('<%= card.banks.code %>')" class="cursor-pointer">
+                    <th scope="row"><%= index + 1 %></th>
+                    <td><%= card.banks.code %></td>
+                    <td><%= card.banks.name %></td>
+                    <td><%= card.maskedCard %></td>
+                    <td><%= card.status %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('action', () => ({
+            bindCard() {
+                fetch('/dashboard/cards', {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                    }
+                })
+                .then(response => response.json())
+                .then((response) => {
+                    if(response.success) {
+                        window.location.href = response.url
+                        return;
+                    }
+                    Swal.fire({
+                        "icon": "error",
+                        "title": "Failed",
+                        "text": response.message
+                    })
+                })
+                .catch(error => {
+                    Swal.fire({
+                        "icon": "error",
+                        "title": "Failed",
+                        "text": error.message
+                    })
+                })
+            },
+            unbindCard(id) {
+                Swal.fire({
+                    title: 'Are you sure to delete this card?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/dashboard/cards?bankCode=' + id, {
+                            method: "DELETE",
+                            headers: {
+                                "Accept": "application/json",
+                                "Content-Type": "application/json",
+                            }
+                        })
+                        .then(response => response.json())
+                        .then((response) => {
+                            if(response.success) {
+                                window.location.href = "/dashboard/cards"
+                                return;
+                            }
+                            Swal.fire({
+                                "icon": "error",
+                                "title": "Failed",
+                                "text": response.message
+                            })
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                "icon": "error",
+                                "title": "Failed",
+                                "text": error.message
+                            })
+                        })
+                    }
+                })
+            }
+        }))
+    })
+</script>
+</html>

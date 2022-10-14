@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription | Dashboard</title>
+    <%- include('../templates/library.ejs') %>
+    <style>
+        tbody tr:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body x-data="action">
+    <%- include('../templates/header.ejs') %>
+    <div class="table-responsive mt-5">
+        <table class="table text-white">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Memberships ID</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Expiry</th>
+                    <th scope="col">Memberships Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% subscriptions.forEach((subscription, index) => { %>
+                <tr @click="cancelSubscription('<%= subscription.id %>')">
+                    <% const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'Desember'] %>
+                    <th scope="row"><%= index + 1 %></th>
+                    <td><%= subscription.membershipId %></td>
+                    <td><%= subscription.membershipDetails.title %></td>
+                    <% const expiryDate = new Date(subscription.expiry) %>
+                    <td><%= expiryDate.getDate() %> <%= months[expiryDate.getMonth()] %> <%= expiryDate.getFullYear() %></td>
+                    <td><%= subscription.status.toUpperCase() %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('action', () => ({
+            cancelSubscription(id) {
+                Swal.fire({
+                    title: 'Are you sure to cancel this subscription?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, cancel it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/dashboard/subscription?subscriptionId=' + id, {
+                            method: "POST",
+                            headers: {
+                                "Accept": "application/json",
+                                "Content-Type": "application/json",
+                            }
+                        })
+                        .then(response => response.json())
+                        .then((response) => {
+                            if(response.success) {
+                                window.location.href = "/dashboard/subscription"
+                                return;
+                            }
+                            Swal.fire({
+                                "icon": "error",
+                                "title": "Failed",
+                                "text": response.message
+                            })
+                        })
+                        .catch(error => {
+                            Swal.fire({
+                                "icon": "error",
+                                "title": "Failed",
+                                "text": error.message
+                            })
+                        })
+                    }
+                })
+            }
+        }))
+    })
+</script>
+</html>

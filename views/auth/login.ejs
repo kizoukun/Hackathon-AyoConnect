@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+    label, input {
+        display: block;
+    }
+
+    input {
+        margin-bottom: 20px;
+    }
+    p, h1, label{
+        color: #fff;
+    }
+    </style>
+    <%- include('../templates/library.ejs') %>
+</head>
+<body>
+    <a href="/"><img src="/image/catalysts.JPG" alt="catalyst logo" width="50" /></a>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="d-flex flex-column">
+            <h1 class="text-center">Sign in to Catalyst</h1>
+            <p class="text-center">Want to join as a consumer? <a href="/auth/register" class="link">Sign up here instead!</a></p>
+            <form id="login-form">
+                <div class="d-flex flex-column d-grid gap-2 mt-2">
+                    <label class="text-uppercase fw-bold text-white" for="email">Email</label>
+                    <input class="form-control form-control-lg" id="email" name="email" type="email"/>
+                    <label for="password" class="text-uppercase fw-bold">Password</label>
+                    <input class="form-control form-control-lg" id="password" name="password" type="password"/>
+                    <button class="btn btn-dark text-uppercase fw-bold btn-lg mt-2" type="submit">Sign In</button>
+                    <p>New to Catalyst? <a href="/auth/register" class="link">Sign up here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script>
+    const loginform = document.getElementById("login-form");
+    loginform.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const formProps = Object.fromEntries(formData);
+        fetch('/auth/login', {
+            method: "POST",
+            headers: {
+                "accept": "application/json",
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(formProps)
+        }).then(response => response.json())
+        .then(response => {
+            if(response.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Success",
+                    text: "Successfully login",
+                })
+                window.location.href = "/dashboard"
+                return;
+            }
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: response.message,
+            })
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: error.message,
+            })
+        })
+    })
+</script>
+</html>
